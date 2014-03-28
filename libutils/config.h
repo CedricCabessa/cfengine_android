@@ -1,9 +1,6 @@
 /* libutils/config.h.  Generated from config.h.in by configure.  */
 /* libutils/config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Absolute path of source tree */
-#define ABS_TOP_SRCDIR "/home/ccabessa/jcdecaux/src/ics.fsl/external/cfengine"
-
 /* Special CFEngine symbol */
 #define AUTOCONF_HOSTNAME "xps"
 
@@ -938,7 +935,7 @@
 /* #undef WITH_XATTR_EXTRA_ARGS */
 
 /* Workdir location */
-#define WORKDIR "/data/cfengine"
+#define WORKDIR "/data/rudder/cfengine-community"
 
 /* Define if XEN cpuid-based HVM detection is available. */
 /* #undef XEN_CPUID_SUPPORT */
