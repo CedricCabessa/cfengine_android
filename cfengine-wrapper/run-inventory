@@ -1,0 +1,52 @@
+#!/system/bin/sh
+
+INVENTORY_DIR="/data/rudder/tmp/inventory"
+NBTRY=10
+TIMEOUT=2
+export TMPDIR=/data/local/tmp
+
+waitForSystemStartup() {
+        while pm list packages 2>&1 | grep "Is the system running?"
+        do
+                sleep 1
+        done
+}
+
+waitForSystemStartup
+
+am broadcast --ez save_inventory true --ez force_update true org.ocsinventory.android.agent/.OCSEventReceiver
+
+
+now=$(busybox date --utc +%s)
+
+while [[ ${NBTRY} -gt 0 ]]
+do
+        NBTRY=$(( ${NBTRY} - 1 ))
+        for inventory in $(find ${INVENTORY_DIR} -type f -name "*.ocs")
+        do
+                mtime=$(stat -t ${inventory} | awk '{print $13}')
+                if [[ ${mtime} -gt $(( ${now} - 60 )) ]]; then
+                        echo "${inventory} is ready"
+                        exit 0
+                else
+                        echo "${inventory} is too old, delete it"
+                        rm ${inventory}
+                fi
+        done
+        sleep ${TIMEOUT}
+done
+echo "cannot create a new inventory, create a minimal inventory" >&2
+cat <<EOF > ${INVENTORY_DIR}/$(cat /proc/sys/kernel/hostname).ocs
+<?xml version ="1.0" encoding="UTF-8"?>
+<REQUEST>
+  <DEVICEID>fakedeviceid</DEVICEID>
+  <CONTENT>
+    <HARDWARE>
+      <OSNAME>Android $(getprop ro.build.version.release)</OSNAME>
+      <IPADDR>$(netcfg |  sed -n 's/eth0\ *UP\ *\([0-9\.]*\).*/\1/p')</IPADDR>
+      <OSVERSION>$(getprop ro.build.version.release)</OSVERSION>
+    </HARDWARE>
+  </CONTENT>
+  <QUERY>INVENTORY</QUERY>
+</REQUEST>
+EOF
